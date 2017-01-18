@@ -38,7 +38,7 @@ public class Main extends Thread {
 	public static String store_file_name;
 	static OutputStream out;
 
-	private static final String outputFilename4android = "C://Users//Home//Desktop//videos4android//";
+	public static final String outputFilename4android = "C://Users//Home//Desktop//videos4android//";
 	public static IMediaWriter writer4android;
 	public static boolean writer_close4android = false;
 	public static String store_name4android;
@@ -48,6 +48,9 @@ public class Main extends Thread {
 	public static int j = 0;
 	
 	public static Process proc;
+	
+	public static int myNotifId = 1;
+	
 	//Disable auto focus of camera through terminal
 	
 	public static int framesRead = 0;
@@ -61,10 +64,12 @@ public class Main extends Thread {
 	}*/
 	
 	public static void main(String[] args) throws IOException {
-	
-		// sending notification to android
-		NotificationThread t2 = new NotificationThread();
 		
+		SendingVideo sendingVideo = new SendingVideo();
+		sendingVideo.start();
+		
+		NotificationThread t2 = new NotificationThread();
+		t2.start();
 		
 		//sending mail
 		SendMail t3 = new SendMail();
@@ -85,9 +90,10 @@ public class Main extends Thread {
 		}*/
 		
 		VideoCapture capture = new VideoCapture(0);
-
+		//org.opencv.videoio.VideoCapture capture = new org.opencv.videoio.VideoCapture(0);
 		BackgroundSubtractorMOG2 backgroundSubtractorMOG = new BackgroundSubtractorMOG2(333, 16, false);
 		
+		//BackgroundSubtractorMOG2 backgroundSubtractorMOG = Video.createBackgroundSubtractorMOG2(333, 16, false);
 		if (!capture.isOpened()) {
 			System.out.println("Error - cannot open camera!");
 			return;
@@ -143,7 +149,10 @@ public class Main extends Thread {
 					writer4android.addVideoStream(0, 0, ICodec.ID.CODEC_ID_MPEG4, 640, 480);
 					startTime = System.nanoTime();
 					writer_close = true;
-					t2.start();
+					// sending notification to android
+					t2.p = 1;
+					t2.myNotifId = myNotifId;
+					t2.sendNotif = true;
 				}
 				
 				store = false;
@@ -178,10 +187,12 @@ public class Main extends Thread {
 				once = true;
 				writer4android.close();
 				writer_close4android = false;
-				SendingVideo sendingVideo = new SendingVideo();
-				sendingVideo.filepath = store_name4android;
-				sendingVideo.start();
-				
+				// sending notification to android
+				t2.p = 2;
+				t2.myNotifId = myNotifId;
+				t2.sendNotif = true;
+				sendingVideo.notifId2filepaths.put(new Integer(myNotifId), store_name4android);
+				myNotifId++;
 			}
 			
 			if (framesRead < 350) {
@@ -193,7 +204,7 @@ public class Main extends Thread {
 			System.out.println("frmes_read" + framesRead);
 			timeNow1 = timeNow2;
 			
-					}
+		}
 	}
 
 	private static BufferedImage MatToBufferedImage(Mat frame) {
