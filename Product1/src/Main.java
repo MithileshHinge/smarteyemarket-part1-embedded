@@ -4,16 +4,17 @@ import java.awt.image.DataBufferByte;
 import java.awt.image.WritableRaster;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.ServerSocket;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+import javax.imageio.ImageIO;
+
 import org.opencv.core.Core;
 //import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfRect;
 import org.opencv.highgui.VideoCapture;
-import org.opencv.imgproc.Imgproc;
 import org.opencv.video.BackgroundSubtractorMOG2;
 
 import com.xuggle.mediatool.IMediaWriter;
@@ -22,8 +23,6 @@ import com.xuggle.xuggler.ICodec;
 import com.xuggle.xuggler.video.ConverterFactory;
 
 public class Main extends Thread {
-	
-	static int frame_no = 0;
 	
 	//private static final String outputFilename = "//home//nuc//Desktop//videos//";
 	//private static final String outputFilename = "//home//odroid//Desktop//videos//";
@@ -37,7 +36,9 @@ public class Main extends Thread {
 	public static String store_name;
 	public static String store_file_name;
 	static OutputStream out;
-
+	
+	private static boolean vid_small = true;
+	
 	public static final String outputFilename4android = "C://Users//Home//Desktop//videos4android//";
 	public static IMediaWriter writer4android;
 	public static boolean writer_close4android = false;
@@ -47,10 +48,9 @@ public class Main extends Thread {
 	static long time3, time4;
 	public static int j = 0;
 	
-	public static Process proc;
-	
 	public static int myNotifId = 1;
 	
+	public static Process proc;
 	//Disable auto focus of camera through terminal
 	
 	public static int framesRead = 0;
@@ -64,10 +64,19 @@ public class Main extends Thread {
 	}*/
 	
 	public static void main(String[] args) throws IOException {
-		
+		try {
+			SendingFrame.serverSocket = new ServerSocket(SendingFrame.port);
+		} catch (IOException e){
+			e.printStackTrace();
+			System.out.println("problem1");
+		}
 		SendingVideo sendingVideo = new SendingVideo();
 		sendingVideo.start();
 		
+		Thread t = new SendingFrame();
+		t.start();
+	
+		// sending notification to android
 		NotificationThread t2 = new NotificationThread();
 		t2.start();
 		
@@ -89,11 +98,10 @@ public class Main extends Thread {
 			e1.printStackTrace();
 		}*/
 		
-		VideoCapture capture = new VideoCapture(0);
-		//org.opencv.videoio.VideoCapture capture = new org.opencv.videoio.VideoCapture(0);
+		VideoCapture capture = new VideoCapture(1);
+
 		BackgroundSubtractorMOG2 backgroundSubtractorMOG = new BackgroundSubtractorMOG2(333, 16, false);
 		
-		//BackgroundSubtractorMOG2 backgroundSubtractorMOG = Video.createBackgroundSubtractorMOG2(333, 16, false);
 		if (!capture.isOpened()) {
 			System.out.println("Error - cannot open camera!");
 			return;
@@ -103,6 +111,19 @@ public class Main extends Thread {
 			timeNow1 = System.currentTimeMillis();
 			Mat camImage = new Mat();
 			capture.read(camImage);
+			BufferedImage unprocessed_image = MatToBufferedImage(camImage); // 265 ms
+
+			if (SendingFrame.flag) {
+				try {
+					ImageIO.write(unprocessed_image, "jpg", out);
+					SendingFrame.socket.close();
+					SendingFrame.flag = false;
+					// System.out.println(String.format("connection_closed"));
+				} catch (IOException e) {
+					
+					e.printStackTrace();
+				}
+			}
 
 			if (camImage.empty()) {
 				System.out.println(" --(!) No captured frame -- Break!");
@@ -149,26 +170,25 @@ public class Main extends Thread {
 					writer4android.addVideoStream(0, 0, ICodec.ID.CODEC_ID_MPEG4, 640, 480);
 					startTime = System.nanoTime();
 					writer_close = true;
-					// sending notification to android
-					t2.p = 1;
+					t2.p=1;
 					t2.myNotifId = myNotifId;
 					t2.sendNotif = true;
 				}
 				
 				store = false;
 				BufferedImage camimg = MatToBufferedImage(camImage);
-				BufferedImage image2 = ConverterFactory.convertToType(camimg, BufferedImage.TYPE_3BYTE_BGR);
 				// encode the image to stream #0
-				writer.encodeVideo(0, image2, System.nanoTime() - startTime, TimeUnit.NANOSECONDS);
+				writer.encodeVideo(0, camimg, System.nanoTime() - startTime, TimeUnit.NANOSECONDS);
 				if(time4-time3<10000){
-				writer4android.encodeVideo(0, image2, System.nanoTime() - startTime, TimeUnit.NANOSECONDS);
+				writer4android.encodeVideo(0, camimg, System.nanoTime() - startTime, TimeUnit.NANOSECONDS);
 				}
 				if (time4-time3>10000 && !once)
 				{
 					writer_close4android= true;
+					SendMail.sendmail_notif=true;
+					vid_small = false;
 				}
-				frame_no++;
-
+				
 			} else {
 				dNow = new Date();
 				// System.out.println("Current Date: " + ft.format(dNow));
@@ -178,17 +198,21 @@ public class Main extends Thread {
 					writer_close = false;
 					once = false;
 					SendMail.sendmail_vdo = true;
-					
+					if(vid_small && time4-time3>4000){
+						writer_close4android= true;
+						//SendMail.sendmail_notif=true;
+						System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ SMALL VIDEO @@@@@@@@@@@@@@@@@@@@@@@@");
+						vid_small = true;
+					}
 				}
-				frame_no = 0;
+				
+					
 				backgroundSubtractorMOG.apply(camImage, fgMask, -1);
 			}
 			if (writer_close4android) {
-				once = true;
 				writer4android.close();
 				writer_close4android = false;
-				// sending notification to android
-				t2.p = 2;
+				t2.p =2;
 				t2.myNotifId = myNotifId;
 				t2.sendNotif = true;
 				sendingVideo.notifId2filepaths.put(new Integer(myNotifId), store_name4android);
@@ -203,7 +227,6 @@ public class Main extends Thread {
 			System.out.println(timeNow2 - timeNow1);
 			System.out.println("frmes_read" + framesRead);
 			timeNow1 = timeNow2;
-			
 		}
 	}
 

@@ -21,6 +21,12 @@ public class SendMail extends Thread {
 	public void run(){
 	while(true)
 	{
+		try {
+			Thread.sleep(0,10000);
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 	if(sendmail_vdo && sendmail_notif )
 	{
 		  System.out.println(".............Sending start zala");
