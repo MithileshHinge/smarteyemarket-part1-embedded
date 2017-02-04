@@ -70,9 +70,6 @@ public class Main extends Thread {
 
 		SendingVideo sendingVideo = new SendingVideo();
 		sendingVideo.start();
-		
-		Thread t = new SendingFrame();
-		t.start();
 	
 		// sending notification to android
 		NotificationThread t2 = new NotificationThread();
