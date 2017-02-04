@@ -64,12 +64,10 @@ public class Main extends Thread {
 	}*/
 	
 	public static void main(String[] args) throws IOException {
-		try {
-			SendingFrame.serverSocket = new ServerSocket(SendingFrame.port);
-		} catch (IOException e){
-			e.printStackTrace();
-			System.out.println("problem1");
-		}
+		
+		SendingFrame sendingFrame = new SendingFrame();
+		sendingFrame.start();
+
 		SendingVideo sendingVideo = new SendingVideo();
 		sendingVideo.start();
 		
@@ -113,17 +111,7 @@ public class Main extends Thread {
 			capture.read(camImage);
 			BufferedImage unprocessed_image = MatToBufferedImage(camImage); // 265 ms
 
-			if (SendingFrame.flag) {
-				try {
-					ImageIO.write(unprocessed_image, "jpg", out);
-					SendingFrame.socket.close();
-					SendingFrame.flag = false;
-					// System.out.println(String.format("connection_closed"));
-				} catch (IOException e) {
-					
-					e.printStackTrace();
-				}
-			}
+			sendingFrame.frame = unprocessed_image;
 
 			if (camImage.empty()) {
 				System.out.println(" --(!) No captured frame -- Break!");
