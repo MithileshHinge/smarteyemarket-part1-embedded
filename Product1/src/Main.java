@@ -26,7 +26,7 @@ public class Main extends Thread {
 	
 	//private static final String outputFilename = "//home//nuc//Desktop//videos//";
 	//private static final String outputFilename = "//home//odroid//Desktop//videos//";
-	private static final String outputFilename = "C://Users//Home//Desktop//videos//";
+	private static final String outputFilename = "C://Users//Sibhali//Desktop//videos//";
 	public static IMediaWriter writer;
 	public static boolean store = false;
 	public static long startTime;
@@ -39,7 +39,7 @@ public class Main extends Thread {
 	
 	private static boolean vid_small = true;
 	
-	public static final String outputFilename4android = "C://Users//Home//Desktop//videos4android//";
+	public static final String outputFilename4android = "C://Users//Sibhali//Desktop//videos4android//";
 	public static IMediaWriter writer4android;
 	public static boolean writer_close4android = false;
 	public static String store_name4android;
@@ -93,7 +93,7 @@ public class Main extends Thread {
 			e1.printStackTrace();
 		}*/
 		
-		VideoCapture capture = new VideoCapture(1);
+		VideoCapture capture = new VideoCapture(0);
 
 		BackgroundSubtractorMOG2 backgroundSubtractorMOG = new BackgroundSubtractorMOG2(333, 16, false);
 		
@@ -172,6 +172,7 @@ public class Main extends Thread {
 					writer_close4android= true;
 					SendMail.sendmail_notif=true;
 					vid_small = false;
+					once=true;
 				}
 				
 			} else {
@@ -187,8 +188,8 @@ public class Main extends Thread {
 						writer_close4android= true;
 						//SendMail.sendmail_notif=true;
 						System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ SMALL VIDEO @@@@@@@@@@@@@@@@@@@@@@@@");
-						vid_small = true;
 					}
+					vid_small = true;
 				}
 				
 					

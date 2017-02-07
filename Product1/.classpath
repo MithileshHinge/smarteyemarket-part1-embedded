@@ -14,6 +14,6 @@
 	<classpathentry kind="lib" path="xuggler/slf4j-api-1.7.21.jar"/>
 	<classpathentry kind="lib" path="xuggler/xuggle-xuggler-5.4.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/OpenCV 3.0.0"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/OpenCV-2.4.9"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
