@@ -40,12 +40,12 @@ public class NotificationThread extends Thread {
 					out_note.flush();
 					if (p==1) System.out.println("1st notif sent..........................");
 					if (p==2) System.out.println("2nd vdo generated notif sent.......................");
+					int q = in_note.read();
+					if(q==9)continue_sending = false;
 					DataOutputStream dout_note = new DataOutputStream(out_note);
 					dout_note.writeInt(myNotifId);
 					dout_note.flush();
 					sendNotif = false;
-					int q = in_note.read();
-					if(q==9)continue_sending = false;
 					socket_note.close();
 					}
 					continue_sending = true;
