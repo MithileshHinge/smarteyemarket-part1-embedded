@@ -1,54 +1,65 @@
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
 
 import javax.imageio.ImageIO;
 
 public class SendingFrame extends Thread {
-	private static int port = 6666;
-	private static ServerSocket serverSocket;
-	private static Socket socket;
-	public BufferedImage frame;
+    private static int udpPort = 6663;
+    private static int port = 6666;
+    private static ServerSocket serverSocket;
+    private static DatagramSocket udpSocket;
+    private static Socket socket;
+    public BufferedImage frame;
 
-	public void run() {
-		try {
-			serverSocket = new ServerSocket(port);
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-		
-		while (true) {
-			try {
-				
-				socket = serverSocket.accept();
-				new Thread(new Runnable(){
-					@Override
-					public void run() {
-						long time1 = System.currentTimeMillis();
-						try {
-							OutputStream out = socket.getOutputStream();
-							ImageIO.write(frame, "jpg", out);
-							socket.close();
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						
+    public void run() {
+        try {
+            //serverSocket = new ServerSocket(port);
+            udpSocket = new DatagramSocket(udpPort);
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
 
-						long time2 = System.currentTimeMillis();
-						System.out.println("time = " + (time2-time1));
-					}
-				}).start();
-				
-				
-			} catch (IOException e) {
-				System.out.println(String.format("connection_prob"));
-				e.printStackTrace();
-			}
+        while (true) {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            if (frame == null) continue;
+            new Thread(new Runnable(){
+                @Override
+                public void run() {
+                    long time1 = System.currentTimeMillis();
+                    try {
+                        //OutputStream out = socket.getOutputStream();
+                        //InputStream in = socket.getInputStream();
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        ImageIO.write(frame, "jpg", baos);
+                        byte[] buf = baos.toByteArray();
 
-		}
+                        //DataOutputStream dout = new DataOutputStream(out);
+                        //dout.writeInt(buf.length);
+                        System.out.println(buf.length);
+                        //in.read();
 
-	}
+                        InetAddress serverAddress = ((InetSocketAddress) socket.getRemoteSocketAddress()).getAddress();
+                        DatagramPacket imgPacket = new DatagramPacket(buf, buf.length, serverAddress, udpPort);
+                        udpSocket.send(imgPacket);
+
+                        socket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+
+                    long time2 = System.currentTimeMillis();
+                    System.out.println("time = " + (time2-time1));
+                }
+            }).start();
+
+
+        }
+
+    }
 }

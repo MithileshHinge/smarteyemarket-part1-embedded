@@ -14,19 +14,22 @@ import javax.imageio.ImageIO;
 import org.opencv.core.Core;
 //import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.highgui.VideoCapture;
+import org.opencv.imgproc.Imgproc;
 import org.opencv.video.BackgroundSubtractorMOG2;
 
 import com.xuggle.mediatool.IMediaWriter;
 import com.xuggle.mediatool.ToolFactory;
 import com.xuggle.xuggler.ICodec;
 import com.xuggle.xuggler.video.ConverterFactory;
+import org.opencv.videoio.VideoCapture;
+
+import static org.opencv.video.Video.createBackgroundSubtractorMOG2;
 
 public class Main extends Thread {
 	
 	//private static final String outputFilename = "//home//nuc//Desktop//videos//";
 	//private static final String outputFilename = "//home//odroid//Desktop//videos//";
-	private static final String outputFilename = "C://Users//Sibhali//Desktop//videos//";
+	private static final String outputFilename = "//Users//mithileshhinge//Desktop//videos//";
 	public static IMediaWriter writer;
 	public static boolean store = false;
 	public static long startTime;
@@ -39,7 +42,7 @@ public class Main extends Thread {
 	
 	private static boolean vid_small = true;
 	
-	public static final String outputFilename4android = "C://Users//Sibhali//Desktop//videos4android//";
+	public static final String outputFilename4android = "/Users//mithileshhinge//Desktop//videos4android//";
 	public static IMediaWriter writer4android;
 	public static boolean writer_close4android = false;
 	public static String store_name4android;
@@ -95,7 +98,7 @@ public class Main extends Thread {
 		
 		VideoCapture capture = new VideoCapture(0);
 
-		BackgroundSubtractorMOG2 backgroundSubtractorMOG = new BackgroundSubtractorMOG2(333, 16, false);
+		BackgroundSubtractorMOG2 backgroundSubtractorMOG = createBackgroundSubtractorMOG2(333, 16, false);
 		
 		if (!capture.isOpened()) {
 			System.out.println("Error - cannot open camera!");
@@ -106,7 +109,11 @@ public class Main extends Thread {
 			timeNow1 = System.currentTimeMillis();
 			Mat camImage = new Mat();
 			capture.read(camImage);
-			BufferedImage unprocessed_image = MatToBufferedImage(camImage); // 265 ms
+
+			Mat camImageLow = new Mat();
+			Imgproc.pyrDown(camImage, camImageLow);
+
+			BufferedImage unprocessed_image = MatToBufferedImage(camImageLow); // 265 ms
 
 			sendingFrame.frame = unprocessed_image;
 
