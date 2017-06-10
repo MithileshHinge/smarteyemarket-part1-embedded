@@ -14,7 +14,7 @@ public class SendingFrame extends Thread {
 
     public void run() {
         try {
-            //serverSocket = new ServerSocket(port);
+            serverSocket = new ServerSocket(port);
             udpSocket = new DatagramSocket(udpPort);
         } catch (IOException e1) {
             e1.printStackTrace();
@@ -22,39 +22,44 @@ public class SendingFrame extends Thread {
 
         while (true) {
             try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
+                socket = serverSocket.accept();
+            } catch (IOException e) {
                 e.printStackTrace();
             }
+
             if (frame == null) continue;
             new Thread(new Runnable(){
                 @Override
                 public void run() {
-                    long time1 = System.currentTimeMillis();
-                    try {
-                        //OutputStream out = socket.getOutputStream();
-                        //InputStream in = socket.getInputStream();
-                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                        ImageIO.write(frame, "jpg", baos);
-                        byte[] buf = baos.toByteArray();
+                    while(true) {
 
-                        //DataOutputStream dout = new DataOutputStream(out);
-                        //dout.writeInt(buf.length);
-                        System.out.println(buf.length);
-                        //in.read();
+                        long time1 = System.currentTimeMillis();
+                        try {
+                            //OutputStream out = socket.getOutputStream();
+                            //InputStream in = socket.getInputStream();
+                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                            ImageIO.write(frame, "jpg", baos);
+                            byte[] buf = baos.toByteArray();
 
-                        InetAddress serverAddress = ((InetSocketAddress) socket.getRemoteSocketAddress()).getAddress();
-                        DatagramPacket imgPacket = new DatagramPacket(buf, buf.length, serverAddress, udpPort);
-                        udpSocket.send(imgPacket);
+                            //DataOutputStream dout = new DataOutputStream(out);
+                            //dout.writeInt(buf.length);
+                            System.out.println(buf.length);
+                            //in.read();
 
-                        socket.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                            if (socket.isClosed()) break;
+
+                            InetAddress serverAddress = ((InetSocketAddress) socket.getRemoteSocketAddress()).getAddress();
+                            DatagramPacket imgPacket = new DatagramPacket(buf, buf.length, serverAddress, udpPort);
+                            udpSocket.send(imgPacket);
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+
+                        long time2 = System.currentTimeMillis();
+                        System.out.println("time = " + (time2 - time1));
                     }
-
-
-                    long time2 = System.currentTimeMillis();
-                    System.out.println("time = " + (time2-time1));
                 }
             }).start();
 
