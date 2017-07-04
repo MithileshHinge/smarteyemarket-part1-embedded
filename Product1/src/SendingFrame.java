@@ -23,7 +23,6 @@ public class SendingFrame extends Thread {
         while (true) {
             try {
                 socket = serverSocket.accept();
-            } catch (IOException e) {
                 e.printStackTrace();
             }
 
