@@ -23,18 +23,23 @@ public class SendingFrame extends Thread {
         while (true) {
             try {
                 socket = serverSocket.accept();
+                }catch (IOException e) {
                 e.printStackTrace();
             }
 
             if (frame == null) continue;
+            
             new Thread(new Runnable(){
                 @Override
                 public void run() {
+                	
                     while(true) {
 
                         long time1 = System.currentTimeMillis();
                         try {
-                            //OutputStream out = socket.getOutputStream();
+                            OutputStream out = socket.getOutputStream();
+                            out.write(1);
+                            out.flush();
                             //InputStream in = socket.getInputStream();
                             ByteArrayOutputStream baos = new ByteArrayOutputStream();
                             ImageIO.write(frame, "jpg", baos);
@@ -45,21 +50,21 @@ public class SendingFrame extends Thread {
                             System.out.println(buf.length);
                             //in.read();
 
-                            if (socket.isClosed()) break;
-
                             InetAddress serverAddress = ((InetSocketAddress) socket.getRemoteSocketAddress()).getAddress();
                             DatagramPacket imgPacket = new DatagramPacket(buf, buf.length, serverAddress, udpPort);
                             udpSocket.send(imgPacket);
 
                         } catch (IOException e) {
                             e.printStackTrace();
+                            System.out.println(".............entered exception");
+                            break;
                         }
 
 
                         long time2 = System.currentTimeMillis();
                         System.out.println("time = " + (time2 - time1));
                     }
-                }
+                   }
             }).start();
 
 
